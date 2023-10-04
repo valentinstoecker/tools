@@ -59,7 +59,7 @@ impl App {
     fn draw(&mut self) -> Result<()> {
         self.term.clear()?;
         self.term.draw(|f| {
-            let widget = Container::new(" vcd ".to_string(), self.state.clone());
+            let widget = Container::new("vcd".to_string(), self.state.clone());
             f.render_widget(widget, f.size());
         })?;
         Ok(())
