@@ -5,9 +5,28 @@ use std::{
 };
 
 use tui::{
-    backend::CrosstermBackend, buffer::Buffer, layout::Rect, style::Style, widgets::Widget,
+    backend::CrosstermBackend, buffer::Buffer, layout::Rect, style::Style, widgets::{Widget, Block, Borders},
     Terminal,
 };
+
+struct Container<W: Widget> {
+    name: String,
+    widget: W,
+}
+
+impl<W: Widget> Container<W> {
+    fn new(name: String, widget: W) -> Self {
+        Self { name, widget }
+    }
+}
+
+impl<W: Widget> Widget for Container<W> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let block = Block::default().title(self.name).borders(Borders::ALL);
+        self.widget.render(block.inner(area), buf);
+        block.render(area, buf);
+    }
+}
 
 #[derive(Clone)]
 struct State {
@@ -41,8 +60,10 @@ impl App {
     }
 
     fn draw(&mut self) -> Result<()> {
+        self.term.clear()?;
         self.term.draw(|f| {
-            f.render_widget(self.state.clone(), f.size());
+            let widget = Container::new("vcd".to_string(), self.state.clone());
+            f.render_widget(widget, f.size());
         })?;
         Ok(())
     }
