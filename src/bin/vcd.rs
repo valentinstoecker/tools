@@ -5,7 +5,11 @@ use std::{
 };
 
 use tui::{
-    backend::CrosstermBackend, buffer::Buffer, layout::Rect, style::Style, widgets::{Widget, Block, Borders},
+    backend::CrosstermBackend,
+    buffer::Buffer,
+    layout::Rect,
+    style::Style,
+    widgets::{Block, Borders, Widget},
     Terminal,
 };
 
