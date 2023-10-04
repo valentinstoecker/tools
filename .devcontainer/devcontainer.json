@@ -9,10 +9,11 @@
 			"extensions": [
 				"GitHub.vscode-github-actions",
 				"GitHub.copilot",
-				"GitHub.vscode-pull-request-github"
+				"GitHub.vscode-pull-request-github",
+				"mhutchie.git-graph"
 			]
 		}
-	},
+	}
 	//"features": {
 	//	"ghcr.io/devcontainers-contrib/features/actions-runner:1": {}
 	//}
