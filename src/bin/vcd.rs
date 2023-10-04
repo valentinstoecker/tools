@@ -4,33 +4,12 @@ use std::{
     path::PathBuf,
 };
 
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use tools::widgets::container::Container;
 use tui::{
-    backend::CrosstermBackend,
-    buffer::Buffer,
-    layout::Rect,
-    style::Style,
-    widgets::{Block, Borders, Widget},
+    backend::CrosstermBackend, buffer::Buffer, layout::Rect, style::Style, widgets::Widget,
     Terminal,
 };
-
-struct Container<W: Widget> {
-    name: String,
-    widget: W,
-}
-
-impl<W: Widget> Container<W> {
-    fn new(name: String, widget: W) -> Self {
-        Self { name, widget }
-    }
-}
-
-impl<W: Widget> Widget for Container<W> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let block = Block::default().title(self.name).borders(Borders::ALL);
-        self.widget.render(block.inner(area), buf);
-        block.render(area, buf);
-    }
-}
 
 #[derive(Clone)]
 struct State {
@@ -54,13 +33,27 @@ struct App {
 }
 
 impl App {
+    fn init(&self) -> Result<()> {
+        enable_raw_mode()?;
+        Ok(())
+    }
+
+    fn reset(self) -> Result<()> {
+        disable_raw_mode()?;
+        let mut term = self.term;
+        term.show_cursor()?;
+        Ok(())
+    }
+
     fn new() -> Result<Self> {
         let path = env::current_dir()?;
         let state = State { path };
         let stdout = io::stdout();
         let backend = CrosstermBackend::new(stdout);
         let term = Terminal::new(backend)?;
-        Ok(App { state, term })
+        let app = App { state, term };
+        app.init()?;
+        Ok(app)
     }
 
     fn draw(&mut self) -> Result<()> {
@@ -76,5 +69,6 @@ impl App {
 fn main() -> Result<()> {
     let mut app = App::new()?;
     app.draw()?;
+    app.reset()?;
     Ok(())
 }
