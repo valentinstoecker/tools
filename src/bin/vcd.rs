@@ -34,10 +34,12 @@ impl StatefulWidget for State {
     }
 }
 
+type Term = Terminal<CrosstermBackend<Stdout>>;
+
 struct App {
     state: State,
     list_state: ListState,
-    term: Terminal<CrosstermBackend<Stdout>>,
+    term: Term,
 }
 
 fn read_dir(path: &str) -> Result<Vec<String>> {
@@ -116,9 +118,7 @@ impl App {
                     self.list_state.select(selected - 1);
                 }
             }
-            None => {
-                self.list_state.select(self.state.subdirs.len() - 1);
-            }
+            None => self.list_state.select(self.state.subdirs.len() - 1),
         }
     }
 
@@ -129,9 +129,7 @@ impl App {
                     self.list_state.select(selected + 1);
                 }
             }
-            None => {
-                self.list_state.select(0);
-            }
+            None => self.list_state.select(0),
         }
     }
 
