@@ -40,6 +40,22 @@ struct App {
     term: Terminal<CrosstermBackend<Stdout>>,
 }
 
+fn read_dir(path: &str) -> Result<Vec<String>> {
+    let mut subdirs = fs::read_dir(path)?
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            entry
+                .path()
+                .file_name()
+                .unwrap()
+                .to_str()
+                .map(|s| s.to_string())
+        })
+        .collect::<Vec<String>>();
+    subdirs.sort();
+    Ok(subdirs)
+}
+
 impl App {
     fn init(&self) -> Result<()> {
         enable_raw_mode()?;
@@ -57,30 +73,31 @@ impl App {
 
     fn new() -> Result<Self> {
         let path = env::current_dir()?.to_str().unwrap().to_string();
-        let subdirs = fs::read_dir(&path)?
-            .filter_map(|entry| entry.ok())
-            .filter_map(|entry| {
-                entry
-                    .path()
-                    .file_name()
-                    .unwrap()
-                    .to_str()
-                    .map(|s| s.to_string())
-            })
-            .collect::<Vec<String>>();
-        let subdirs = List::new(subdirs);
-        let state = State { path, subdirs };
+        let subdirs = List::new(Vec::new());
+        let state = State {
+            path: "".to_string(),
+            subdirs,
+        };
         let stdout = io::stdout();
         let backend = CrosstermBackend::new(stdout);
         let term = Terminal::new(backend)?;
         let list_state = ListState::default();
-        let app = App {
+        let mut app = App {
             state,
             term,
             list_state,
         };
         app.init()?;
+        app.set_dir(path)?;
         Ok(app)
+    }
+
+    fn set_dir(&mut self, path: String) -> Result<()> {
+        let subdirs = read_dir(&path)?;
+        self.state.path = path;
+        self.state.subdirs = List::new(subdirs);
+        self.list_state.select(0);
+        Ok(())
     }
 
     fn draw(&mut self) -> Result<()> {
@@ -117,6 +134,21 @@ impl App {
             }
         }
     }
+
+    fn left(&mut self) {
+        let path = self.state.path.clone();
+        let path = path.split("/").collect::<Vec<&str>>();
+        let path = path[..path.len() - 1].join("/");
+        self.set_dir(path).unwrap();
+    }
+
+    fn right(&mut self) {
+        let path = self.state.path.clone();
+        if let Some(selected) = self.state.subdirs.get_sel(&self.list_state) {
+            let path = format!("{}/{}", path, selected);
+            let _ = self.set_dir(path);
+        }
+    }
 }
 
 fn main() -> Result<()> {
@@ -128,6 +160,8 @@ fn main() -> Result<()> {
                 KeyCode::Esc => break,
                 KeyCode::Up => app.up(),
                 KeyCode::Down => app.down(),
+                KeyCode::Left => app.left(),
+                KeyCode::Right => app.right(),
                 _ => {}
             }
         }

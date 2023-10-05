@@ -39,6 +39,14 @@ impl List {
     pub fn len(&self) -> usize {
         self.items.len()
     }
+
+    pub fn get(&self, index: usize) -> Option<&String> {
+        self.items.get(index)
+    }
+
+    pub fn get_sel(&self, state: &ListState) -> Option<&String> {
+        state.selected.and_then(|i| self.get(i))
+    }
 }
 
 impl StatefulWidget for List {
