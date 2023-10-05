@@ -81,3 +81,20 @@ impl StatefulWidget for List {
         }
     }
 }
+
+#[test]
+fn test_list() {
+    let items = vec!["foo".to_string(), "bar".to_string(), "baz".to_string()];
+    let mut state = ListState::default();
+    let list = List::new(items);
+    assert_eq!(list.get_sel(&state), None);
+    state.select(1);
+    assert_eq!(list.get_sel(&state), Some(&"bar".to_string()));
+    state.select(2);
+    assert_eq!(list.get_sel(&state), Some(&"baz".to_string()));
+    state.select(3);
+    assert_eq!(list.get_sel(&state), None);
+    assert_eq!(list.len(), 3);
+    assert_eq!(list.get(0), Some(&"foo".to_string()));
+    assert_eq!(list.get(4), None);
+}
