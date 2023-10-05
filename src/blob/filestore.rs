@@ -7,25 +7,9 @@ use std::{
 use sha1::{Digest, Sha1};
 use tempfile::NamedTempFile;
 
+use crate::utils::ioutil::TeeWriter;
+
 use super::{BlobStore, Hash};
-
-struct TeeWriter<'a, W: Write, V: Write> {
-    w1: &'a mut W,
-    w2: &'a mut V,
-}
-
-impl<'a, W: Write, V: Write> Write for TeeWriter<'a, W, V> {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.w1.write_all(buf)?;
-        self.w2.write_all(buf)?;
-        Ok(buf.len())
-    }
-    fn flush(&mut self) -> io::Result<()> {
-        self.w1.flush()?;
-        self.w2.flush()?;
-        Ok(())
-    }
-}
 
 pub struct FileStore {
     path: PathBuf,
@@ -50,10 +34,9 @@ impl BlobStore for FileStore {
         let mut sha = Sha1::new();
         let mut temp_file = NamedTempFile::new_in(&self.path)?;
         {
-            let mut tee_w = TeeWriter {
-                w1: &mut BufWriter::new(&mut sha),
-                w2: &mut BufWriter::new(&mut temp_file),
-            };
+            let buf_file = BufWriter::new(&mut temp_file);
+            let buf_sha = BufWriter::new(&mut sha);
+            let mut tee_w = TeeWriter::new(buf_file, buf_sha);
             io::copy(r, &mut tee_w)?;
         }
         let hash = Hash(sha.finalize().into());
