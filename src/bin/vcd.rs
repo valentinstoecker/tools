@@ -64,15 +64,6 @@ impl App {
         Ok(())
     }
 
-    fn reset(self) -> Result<()> {
-        disable_raw_mode()?;
-        let mut term = self.term;
-        term.show_cursor()?;
-        term.set_cursor(0, 0)?;
-        term.clear()?;
-        Ok(())
-    }
-
     fn new() -> Result<Self> {
         let path = env::current_dir()?.to_str().unwrap().to_string();
         let subdirs = List::new(Vec::new());
@@ -125,7 +116,7 @@ impl App {
     fn down(&mut self) {
         match self.list_state.selected {
             Some(selected) => {
-                if selected < self.state.subdirs.len() - 1 {
+                if selected + 1 < self.state.subdirs.len() {
                     self.list_state.select(selected + 1);
                 }
             }
@@ -135,17 +126,33 @@ impl App {
 
     fn left(&mut self) {
         let path = self.state.path.clone();
-        let path = path.split("/").collect::<Vec<&str>>();
-        let path = path[..path.len() - 1].join("/");
-        self.set_dir(path).unwrap();
+        let parts = path.split('/').collect::<Vec<&str>>();
+        let _ = if parts.len() > 2 {
+            let path = parts[..parts.len() - 1].join("/");
+            self.set_dir(path)
+        } else {
+            self.set_dir("/".to_string())
+        };
     }
 
     fn right(&mut self) {
         let path = self.state.path.clone();
         if let Some(selected) = self.state.subdirs.get_sel(&self.list_state) {
-            let path = format!("{}/{}", path, selected);
-            let _ = self.set_dir(path);
+            let _ = if path == "/" {
+                self.set_dir(format!("/{}", selected))
+            } else {
+                self.set_dir(format!("{}/{}", path, selected))
+            };
         }
+    }
+}
+
+impl Drop for App {
+    fn drop(&mut self) {
+        disable_raw_mode().unwrap();
+        self.term.show_cursor().unwrap();
+        self.term.set_cursor(0, 0).unwrap();
+        self.term.clear().unwrap();
     }
 }
 
@@ -164,6 +171,5 @@ fn main() -> Result<()> {
             }
         }
     }
-    app.reset()?;
     Ok(())
 }
