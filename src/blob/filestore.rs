@@ -1,6 +1,6 @@
 use std::{
     fs::{self, File},
-    io::{self, Read, Result, Write},
+    io::{self, BufReader, BufWriter, Read, Result, Write},
     path::PathBuf,
 };
 
@@ -39,20 +39,20 @@ impl FileStore {
 }
 
 impl BlobStore for FileStore {
-    fn get<W: Write>(&self, h: &super::Hash, w: &mut W) -> Result<()> {
+    fn get<W: Write>(&self, h: &Hash, w: &mut W) -> Result<()> {
         let str = h.to_string();
         let path = self.path.join(&str[0..2]).join(&str[2..]);
-        let mut f = File::open(path)?;
-        io::copy(&mut f, w)?;
+        let mut r = BufReader::new(File::open(path)?);
+        io::copy(&mut r, w)?;
         Ok(())
     }
-    fn put<R: Read>(&mut self, r: &mut R) -> Result<super::Hash> {
+    fn put<R: Read>(&mut self, r: &mut R) -> Result<Hash> {
         let mut sha = Sha1::new();
         let mut temp_file = NamedTempFile::new_in(&self.path)?;
         {
             let mut tee_w = TeeWriter {
-                w1: &mut io::BufWriter::new(&mut sha),
-                w2: &mut io::BufWriter::new(&mut temp_file),
+                w1: &mut BufWriter::new(&mut sha),
+                w2: &mut BufWriter::new(&mut temp_file),
             };
             io::copy(r, &mut tee_w)?;
         }
