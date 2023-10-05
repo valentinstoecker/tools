@@ -15,12 +15,12 @@ fn test_blob_store<T: BlobStore>(mut bs: T) -> Result<()> {
     assert_ne!(s_1, s_3);
     let mut hashes = Vec::with_capacity(1000);
     for i in 0..1000 {
-        let h = bs.put_str(&format!("hello world {}", i))?;
+        let h = bs.put_str(&format!("hello world {}", i).repeat(1000))?;
         hashes.push(h);
     }
     for i in 0..1000 {
         let s = bs.get_str(&hashes[i])?;
-        assert_eq!(s, format!("hello world {}", i));
+        assert_eq!(s, format!("hello world {}", i).repeat(1000));
     }
     Ok(())
 }
