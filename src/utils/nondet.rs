@@ -41,8 +41,8 @@ mod tests {
 
     #[test]
     fn test_and_then() {
-        let nd = NonDet::new(vec![1, 2, 3]);
-        let nd2 = nd.and_then(|x| NonDet::new(vec![x * 2, x * 3]));
-        assert_eq!(nd2.0, vec![2, 3, 4, 6, 6, 9]);
+        let f = |x| NonDet::new(vec![x].repeat(x));
+        let nd = NonDet::new(vec![1, 2, 3]).and_then(f);
+        assert_eq!(nd.0, vec![1, 2, 2, 3, 3, 3]);
     }
 }

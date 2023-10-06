@@ -18,7 +18,7 @@ impl<B: BlobStore> BlobStore for ZippedStore<B> {
         self.0.get(h, &mut dec)
     }
     fn put<R: Read>(&mut self, r: &mut R) -> Result<Hash> {
-        let mut enc = ZlibEncoder::new(r, Compression::best());
+        let mut enc = ZlibEncoder::new(r, Compression::default());
         self.0.put(&mut enc)
     }
 }

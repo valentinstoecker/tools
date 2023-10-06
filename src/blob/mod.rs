@@ -11,6 +11,15 @@ pub mod zipped;
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub struct Hash([u8; 20]);
 
+impl Hash {
+    pub fn new(buf: [u8; 20]) -> Self {
+        Self(buf)
+    }
+    pub fn buf(&self) -> &[u8] {
+        &self.0
+    }
+}
+
 impl Display for Hash {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut s = String::new();
@@ -57,7 +66,6 @@ pub trait BlobStore {
 
 #[cfg(test)]
 mod tests {
-
     use super::{filestore::FileStore, memstore::MemStore, zipped::ZippedStore, BlobStore};
     use std::{fs, io::Result};
 
